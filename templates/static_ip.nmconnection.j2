@@ -1,0 +1,23 @@
+[connection]
+id={{ item.name }}
+uuid={{ 999999 | random | to_uuid }}
+type=ethernet
+interface-name=eth0
+permissions=
+
+[ethernet]
+mac-address-blacklist=
+
+[ipv4]
+# Method 'manual' sets the static IP
+method=manual
+# Syntax: address1=IP/PREFIX,GATEWAY
+address1={{ item.ip_address }}/{{ item.subnet_mask | default('24') }},{{ item.gateway }}
+dns={{ item.dns_servers | default('8.8.8.8') }};
+ignore-auto-dns=true
+
+[ipv6]
+addr-gen-mode=default
+method=disabled
+
+[proxy]

@@ -1,0 +1,93 @@
+---
+# Ansible Playbook to provision KVM Virtual Machines to bootstrap environment
+- name: Provision KVM Virtual Machines
+  hosts: hypervisors
+  become: yes
+  vars_files:
+    - vm_settings.yml
+
+  tasks:
+      - name: Ensure virtualization packages are installed (RHEL 9)
+        ansible.builtin.dnf:
+          name:
+            - qemu-kvm
+            - libvirt
+            - libvirt-client
+            - virt-install
+            - python3-libvirt
+            - iproute
+          state: present
+
+      # - name: Ensure libvirtd service is started and enabled
+      #   ansible.builtin.service:
+      #     name: libvirtd
+      #     state: started
+      #     # enabled: yes
+
+      - name: Create VM disk images from base image
+        ansible.builtin.command:
+          cmd: "qemu-img create -f qcow2 \
+            -b {{ vm_os_image_path }} \
+            -F qcow2 \
+            {{ libvirt_pool_dir }}/{{ item.name }}.qcow2 {{ item.disk_size }}"
+          creates: "{{ libvirt_pool_dir }}/{{ item.name }}.qcow2"
+        loop: "{{ vms }}"
+        register: copy_results
+
+      # - name: Print debug info about created images
+      #   ansible.builtin.debug:
+      #     var: copy_results 
+
+      - name: Generate NetworkManager Keyfile locally
+        ansible.builtin.template:
+          src: templates/static_ip.nmconnection.j2
+          dest: "/tmp/{{ item.name }}.nmconnection"
+          mode: '0600'
+        # delegate_to: localhost
+        loop: "{{ copy_results.results | selectattr('changed') | map(attribute='item') | list }}"
+
+      # - name: break
+      #   meta: end_play
+
+      - name: Customize VM image
+        ansible.builtin.command:
+          cmd: "virt-customize -a {{ libvirt_pool_dir }}/{{ item.item.name }}.qcow2 \
+            --upload /tmp/{{ item.item.name }}.nmconnection:/etc/NetworkManager/system-connections/{{ item.item.name }}.nmconnection \
+            --chmod 600:/etc/NetworkManager/system-connections/{{ item.item.name }}.nmconnection \
+            --chown 0:0:/etc/NetworkManager/system-connections/{{ item.item.name }}.nmconnection \
+            --hostname {{ item.item.name }} \
+            --root-password password:{{ vm_root_pass }} \
+            --ssh-inject 'root:file:{{ ssh_key_path }}' \
+            --uninstall cloud-init \
+            --selinux-relabel"
+        loop: "{{ copy_results.results }}"
+        loop_control:
+          label: "{{ item.item.name }}"
+        when: item.changed
+    
+      - name: Cleanup local temp file
+        ansible.builtin.file:
+          path: "/tmp/{{ item.item.name }}.nmconnection"
+          state: absent
+        loop: "{{ copy_results.results }}"
+        loop_control:
+          label: "{{ item.item.name }}"
+        when: item.changed
+
+        # Ensure this task only runs when the image is newly created
+        # when: copy_results is changed
+        # args:
+          # Prevents "command" module from complaining about shell metacharacters like '|' and '\'
+        #  executable: /bin/bash
+
+      - name: Define and start KVM virtual machines
+        community.libvirt.virt:
+          command: define
+          xml: "{{ lookup('template', 'vm_template.xml.j2') }}"
+        loop: "{{ copy_results.results | selectattr('changed') | map(attribute='item') | list }}"
+
+      - name: Ensure VMs are running
+        community.libvirt.virt:
+          name: "{{ item.name }}"
+          state: running
+        loop: "{{ vms }}"

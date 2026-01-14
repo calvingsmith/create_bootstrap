@@ -1,0 +1,54 @@
+- name: Provision KVM Virtual Machines on RHEL 9
+  hosts: hypervisor
+  become: yes
+  vars:
+	# General VM settings
+    vm_memory: 2048
+    vm_vcpus: 2
+    vm_network: default
+    vm_storage_pool: default
+
+    # RHEL standard path for images
+    vm_os_image_path: "/var/lib/libvirt/images/rhel9-base.qcow2"
+
+    # List of VMs to create
+    vms:
+      - name: web-server-01
+        disk_size: 20G
+      - name: web-server-02
+        disk_size: 20G
+
+    tasks:
+      - name: Ensure virtualization packages are installed (RHEL 9)
+        ansible.builtin.dnf:
+          name:
+            - qemu-kvm
+            - libvirt
+            - libvirt-client
+            - virt-install
+            - python3-libvirt
+          state: present
+
+      - name: Ensure libvirtd service is started and enabled
+        ansible.builtin.service:
+          name: libvirtd
+          state: started
+          enabled: yes
+
+      - name: Create VM disk images from base image
+        ansible.builtin.command:
+          cmd: "qemu-img create -f qcow2 -b {{ vm_os_image_path }} -F qcow2 /var/lib/libvirt/images/{{ item.name }}.qcow2 {{ item.disk_size }}"
+          creates: "/var/lib/libvirt/images/{{ item.name }}.qcow2"
+        loop: "{{ vms }}"
+
+      - name: Define and start KVM virtual machines
+        community.libvirt.virt:
+          command: define
+          xml: "{{ lookup('template', 'vm_template.xml.j2') }}"
+        loop: "{{ vms }}"
+
+      - name: Ensure VMs are running
+        community.libvirt.virt:
+          name: "{{ item.name }}"
+          state: running
+        loop: "{{ vms }}"

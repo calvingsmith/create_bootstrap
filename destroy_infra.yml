@@ -1,0 +1,48 @@
+---
+# Destroy KVM Virtual Machines Playbook
+- name: Destroy KVM Virtual Machines
+  hosts: hypervisors
+  become: yes
+  vars_files:
+    - vm_settings.yml
+
+  tasks:
+
+    - name: Get list of existing VMs
+      community.libvirt.virt:
+        command: list_vms
+      register: existing_vms
+
+    - name: Stop VMs if they are running
+      community.libvirt.virt:
+        name: "{{ item.name }}"
+        state: destroyed
+      loop: "{{ vms }}"
+      when: item.name in existing_vms.list_vms
+      ignore_errors: yes
+
+    - name: Undefine VMs (remove from libvirt registry)
+      community.libvirt.virt:
+        name: "{{ item.name }}"
+        command: undefine
+      loop: "{{ vms }}"
+      when: item.name in existing_vms.list_vms
+
+    - name: Remove VM disk images
+      ansible.builtin.file:
+        path: "/var/lib/libvirt/images/{{ item.name }}.qcow2"
+        state: absent
+      loop: "{{ vms }}"
+
+    - name: Confirm cleanup
+      ansible.builtin.debug:
+        msg: "VM {{ item.name }} and its storage have been successfully removed."
+      loop: "{{ vms }}"
+
+    - name: Remove VM from inventory
+      ansible.builtin.lineinfile:
+        path: "/etc/ansible/hosts"
+        regexp: "^{{ item.name }}"
+        state: absent
+      loop: "{{ vms }}"
+      ignore_errors: yes

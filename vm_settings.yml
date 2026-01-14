@@ -1,0 +1,28 @@
+---
+# General VM settings
+libvirt_pool_dir: "/var/lib/libvirt/images"
+vm_memory: 2048
+vm_vcpus: 2
+vm_network: demo.net
+vm_storage_pool: default
+vm_os_image_path: "/var/lib/libvirt/images/rhel-9.3-x86_64-kvm.qcow2"
+vm_root_pass: "RedHat123!"   # Change this to a secure password
+ssh_key_path: "/root/.ssh/id_rsa.pub"
+
+
+# List of VMs to create
+vms:
+- name: idm.demo.net
+  ip_address: 192.168.25.2
+  gateway: 192.168.25.1
+  dns_servers:
+    - 192.168.25.1
+  disk_size: 10G
+- name: satellite.demo.net
+  ip_address: 192.168.25.3
+  gateway: 192.168.25.1
+  dns_servers:
+    - 192.168.25.2
+  disk_size: 100G
+  vm_memory: 24576
+  vm_vcpus: 4
