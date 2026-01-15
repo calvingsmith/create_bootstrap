@@ -33,12 +33,6 @@ ansible-navigator:
     rotate-artifacts-count: 5
     timeout: 300
     job-events: False
-  
-  pull:
-    policy: missing
-
-  playbook-artifacts:
-    enabled: False
 #
 #   app: run
 #
@@ -58,10 +52,16 @@ ansible-navigator:
 #     shell: False
 #     command: /bin/foo
 #
-# execution-environment:
+  execution-environment:
 #   container-options:
 #   volume-mounts:
 #     container-engine: podman
 #     enabled: False
 #     environment-variables:
 #       pass:
+  
+    pull:
+      policy: missing
+
+  playbook-artifact:
+    enable: False

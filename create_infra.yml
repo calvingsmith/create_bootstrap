@@ -18,12 +18,6 @@
             - iproute
           state: present
 
-      # - name: Ensure libvirtd service is started and enabled
-      #   ansible.builtin.service:
-      #     name: libvirtd
-      #     state: started
-      #     # enabled: yes
-
       - name: Create VM disk images from base image
         ansible.builtin.command:
           cmd: "qemu-img create -f qcow2 \
@@ -53,7 +47,7 @@
         ansible.builtin.command:
           cmd: "virt-customize -a {{ libvirt_pool_dir }}/{{ item.item.name }}.qcow2 \
             --upload /tmp/{{ item.item.name }}.nmconnection:/etc/NetworkManager/system-connections/{{ item.item.name }}.nmconnection \
-            --chmod 600:/etc/NetworkManager/system-connections/{{ item.item.name }}.nmconnection \
+            --chmod 0600:/etc/NetworkManager/system-connections/{{ item.item.name }}.nmconnection \
             --chown 0:0:/etc/NetworkManager/system-connections/{{ item.item.name }}.nmconnection \
             --hostname {{ item.item.name }} \
             --root-password password:{{ vm_root_pass }} \

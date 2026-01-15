@@ -6,7 +6,7 @@ vm_vcpus: 2
 vm_network: demo.net
 vm_storage_pool: default
 vm_os_image_path: "/var/lib/libvirt/images/rhel-9.3-x86_64-kvm.qcow2"
-vm_root_pass: "RedHat123!"   # Change this to a secure password
+vm_root_pass: "redhat"   # Change this to a secure password
 ssh_key_path: "/root/.ssh/id_rsa.pub"
 
 
