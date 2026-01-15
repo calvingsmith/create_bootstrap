@@ -33,6 +33,12 @@ ansible-navigator:
     rotate-artifacts-count: 5
     timeout: 300
     job-events: False
+  
+  pull:
+    policy: missing
+
+  playbook-artifacts:
+    enabled: False
 #
 #   app: run
 #

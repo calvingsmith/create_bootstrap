@@ -13,16 +13,16 @@ ssh_key_path: "/root/.ssh/id_rsa.pub"
 # List of VMs to create
 vms:
 - name: idm.demo.net
-  ip_address: 192.168.25.2
+  ip_address: 192.168.25.10
   gateway: 192.168.25.1
   dns_servers:
     - 192.168.25.1
   disk_size: 10G
 - name: satellite.demo.net
-  ip_address: 192.168.25.3
+  ip_address: 192.168.25.11
   gateway: 192.168.25.1
   dns_servers:
-    - 192.168.25.2
+    - 192.168.25.10
   disk_size: 100G
   vm_memory: 24576
   vm_vcpus: 4
