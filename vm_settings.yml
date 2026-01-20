@@ -1,11 +1,11 @@
 ---
 # General VM settings
 libvirt_pool_dir: "/var/lib/libvirt/images"
-vm_memory: 2048
-vm_vcpus: 2
+# vm_memory: 2048
+# vm_vcpus: 2
 vm_network: demo.net
 vm_storage_pool: default
-vm_os_image_path: "/var/lib/libvirt/images/rhel-9.3-x86_64-kvm.qcow2"
+vm_os_image_path: "/var/lib/libvirt/images/rhel-9.7-x86_64-kvm.qcow2"
 vm_root_pass: "redhat"   # Change this to a secure password
 ssh_key_path: "/root/.ssh/id_rsa.pub"
 
@@ -18,6 +18,8 @@ vms:
   dns_servers:
     - 192.168.25.1
   disk_size: 10G
+  vm_memory: 8192
+  vm_vcpus: 2
 - name: satellite.demo.net
   ip_address: 192.168.25.11
   gateway: 192.168.25.1
