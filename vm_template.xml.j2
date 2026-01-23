@@ -1,7 +1,7 @@
 <domain type='kvm'>
 <name>{{ item.name }}</name>
-<memory unit='MiB'>{{ item.vm_memory }}</memory>
-<vcpu placement='static'>{{ item.vm_vcpus }}</vcpu>
+<memory unit='MiB'>{{ item.vm_memory | default(vm_memory) }}</memory>
+<vcpu placement='static'>{{ item.vm_vcpus | default(vm_vcpus) }}</vcpu>
 <os>
 <type arch='x86_64' machine='pc-q35-rhel9.0.0'>hvm</type>
 <boot dev='hd'/>
@@ -24,7 +24,7 @@
 <target dev='vda' bus='virtio'/>
 </disk>
 <interface type='network'>
-<source network='{{ vm_network }}'/>
+<source network='{{ item.vm_network | default(vm_network) }}'/>
 <model type='virtio'/>
 </interface>
 <console type='pty'>
